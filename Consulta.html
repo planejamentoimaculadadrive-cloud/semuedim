@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Meus Planejamentos - 2026</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f0f2f5; padding: 20px; }
+        .container { background: #fff; max-width: 1100px; margin: 0 auto; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
+        h2 { color: #1a73e8; margin-bottom: 20px; }
+        
+        /* Ajuste para tabela rolar no celular */
+        .table-responsive { width: 100%; overflow-x: auto; margin-top: 20px; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+        th { background: #f8f9fa; color: #5f6368; padding: 15px 12px; border-bottom: 2px solid #eee; text-align: left; }
+        td { padding: 15px 12px; border-bottom: 1px solid #eee; vertical-align: middle; word-wrap: break-word; }
+        
+        .col-data { width: 100px; }
+        .col-escola { width: 220px; }
+        .col-area { width: 160px; }
+        .col-tema { width: auto; }
+        .col-acoes { width: 140px; }
+
+        /* Botões de Ação - CORES NOVAS SUGERIDAS */
+        .grupo-acoes { display: flex; flex-direction: column; gap: 4px; }
+        .btn-acao { width: 100%; padding: 7px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 10px; text-transform: uppercase; transition: 0.2s; }
+        
+        .btn-editar { background: #1a73e8; color: white; } /* Azul Royal */
+        .btn-editar:hover { background: #1557b0; }
+
+        .btn-pdf { background: #27ae60; color: white; } /* Verde Esmeralda */
+        .btn-pdf:hover { background: #1e8449; }
+
+        .btn-excluir { background: #fff; color: #d93025; border: 1px solid #d93025; } /* Branco com Borda Vermelha */
+        .btn-excluir:hover { background: #fce8e6; }
+        
+        #statusBusca { padding: 20px; text-align: center; color: #666; font-weight: bold; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #printableArea, #printableArea * { visibility: visible; }
+            #printableArea { position: absolute; left: 0; top: 0; width: 100%; display: block !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+        <h2 style="margin: 0;">Meus Planejamentos</h2>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <a href="Painel.html" 
+               style="text-decoration: none; color: #5f6368; font-size: 14px; font-weight: 500; border: 2px solid #5f6368; padding: 6px 12px; border-radius: 5px; display: flex; align-items: center;">
+                ⬅️ Voltar ao Painel
+            </a>
+
+            <a href="Formulario.html" 
+               style="background-color: #27ae60; color: white; padding: 8px 14px; border-radius: 5px; text-decoration: none; font-weight: bold; font-size: 14px;">
+                + Novo Plano
+            </a>
+        </div>
+    </header>
+
+    <div style="margin: 15px 0;">
+        <input type="text" id="filtroBusca" onkeyup="filtrarTabela()" 
+               placeholder="🔍 Pesquisar por Tema, Escola, Área ou Data..." 
+               style="width: 100%; padding: 14px; border: 2px solid #eee; border-radius: 10px; font-size: 15px; outline: none; transition: 0.3s;">
+    </div>
+
+    <div id="statusBusca">Carregando seus registros...</div>
+
+    <div class="table-responsive">
+        <table id="tabelaRegistros">
+            <thead>
+                <tr>
+                    <th class="col-data">Data</th>
+                    <th class="col-escola">Escola / Turma</th>
+                    <th class="col-area">Área</th>
+                    <th class="col-tema">Tema</th>
+                    <th class="col-acoes">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="corpoTabela"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="printableArea" style="display:none;">
+    <div id="conteudoImpressao"></div>
+</div>
+
+<script>
+    const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxXrSQVjDjz9zEE46OVSEYR5muSVCjGVLRG8PpJiYC8cFHB-coCd1avS6y2Yh3TJpPD/exec";
+    const nomeProfessor = localStorage.getItem('nomeProfessor');
+
+    window.onload = carregarDados;
+
+    async function carregarDados() {
+        if(!nomeProfessor) { window.location.href = "Login.html"; return; }
+        try {
+            const res = await fetch(`${URL_SCRIPT}?getRegistros=true&professor=${nomeProfessor}`);
+            let registros = await res.json();
+            
+            // Ordenação por data (Mais recente primeiro)
+            registros.sort((a, b) => new Date(b.data) - new Date(a.data));
+
+            const tbody = document.getElementById('corpoTabela');
+            tbody.innerHTML = "";
+            document.getElementById('statusBusca').style.display = "none";
+
+            if (registros.length === 0) {
+                document.getElementById('statusBusca').style.display = "block";
+                document.getElementById('statusBusca').innerText = "Nenhum planejamento encontrado.";
+                return;
+            }
+
+            registros.forEach(reg => {
+                const dataFormatada = reg.data ? new Date(reg.data).toLocaleDateString('pt-BR') : "---";
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${dataFormatada}</strong></td>
+                        <td><span style="color:#1a73e8; font-weight:bold;">${reg.escola}</span><br><small>${reg.turma}</small></td>
+                        <td>${reg.area}</td>
+                        <td style="font-style: italic; color: #444;">${reg.tema}</td>
+                        <td>
+                            <div class="grupo-acoes">
+                                <button class="btn-acao btn-editar" onclick='editarRegistro(${JSON.stringify(reg)})'>EDITAR</button>
+                                <button class="btn-acao btn-pdf" onclick='gerarPDF(${JSON.stringify(reg)})'>PDF / IMPRIMIR</button>
+                                <button class="btn-acao btn-excluir" onclick="excluir(${reg.linha}, '${reg.tema}')">EXCLUIR</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+        } catch (e) { 
+            document.getElementById('statusBusca').innerText = "Erro ao carregar dados. Tente novamente.";
+        }
+    }
+
+    function editarRegistro(reg) {
+        if (!reg.id) {
+            alert("Erro: ID inválido.");
+            return;
+        }
+        window.location.href = `Formulario.html?idParaEditar=${reg.id}&linha=${reg.linha}`;
+    }
+
+    async function excluir(linha, tema) {
+        if(!confirm(`Deseja excluir permanentemente o plano: "${tema}"?`)) return;
+        const formData = new URLSearchParams();
+        formData.append("acao", "EXCLUIR_REGISTRO");
+        formData.append("linha", linha);
+        try {
+            document.getElementById('statusBusca').style.display = "block";
+            document.getElementById('statusBusca').innerText = "Excluindo...";
+            await fetch(URL_SCRIPT, { method: "POST", body: formData });
+            carregarDados();
+        } catch (e) { alert("Erro ao excluir."); }
+    }
+
+    function gerarPDF(reg) {
+        const logos = {
+            "EMEIF MARIA MADALENA TORRES DANTAS": "https://lh3.googleusercontent.com/d/1K-Ih0PBzwMzmQXB7lWTZLQIZVifViHfL",
+            "EMEF JOAQUIM ALVES FEITOSA": "https://lh3.googleusercontent.com/d/1hv79RSjQJo8CVsU_04BPZD86JIfhyeY2",
+            "EMEF MIGUEL OTAVIANO DE MEDEIROS": "https://lh3.googleusercontent.com/d/1OW6SZAE_-Mvx8X3CPodNh0h7PLapSDOc",
+            "EMEIF FRANCISCA QUIRINO FERREIRA": "https://lh3.googleusercontent.com/d/1O-I2kotbVIyPGxIu33ogp01haJej6ZL0",
+            "EMEIF JOÃO GONÇALVES DA SILVA": "https://lh3.googleusercontent.com/d/1ifsNIUB2Ea18xaVSZiDqJkDV_940dieh",
+            "EMEIF JOSÉ ALVES SABINO": "https://lh3.googleusercontent.com/d/1LE0qxYPlHKCMqzyXJRlVAKQ8P3-buMEU",
+            "EMEIF JOSÉ PEDRO DE MELO": "https://lh3.googleusercontent.com/d/1JoBnXC_DYapa5NL_mI3hXQcVkaONHntr",
+            "EMEIF JOSÉ VIEIRA DA SILVA": "https://lh3.googleusercontent.com/d/1rb3Pjy7IxHKlEWQEg5Q9eXG25QsCgfTv",
+            "EMEIF MARIA PEREIRA DOS SANTOS": "https://lh3.googleusercontent.com/d/1uYhcIRmA3Ue_cpVG3uIh7UcoUCUv_63T"
+        };
+        const logoUrl = logos[reg.escola.trim()] || "";
+        const dispararImpressao = () => {
+            const imgHtml = logoUrl ? `<img src="${logoUrl}" style="height:90px; width:auto; display:block; margin: 0 auto 15px auto;">` : "";
+            const conteudo = `
+                <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; border: 1px solid #ddd; max-width: 900px; margin: auto; background: #fff;">
+                    <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 20px;">
+                        ${imgHtml}
+                        <h2 style="margin: 0; font-size: 22px; text-transform: uppercase;">${reg.escola}</h2>
+                        <h3 style="margin: 5px 0; font-size: 18px; color: #555;">PLANO DE AULA SEMANAL</h3>
+                    </div>
+                    <table style="width: 100%; margin-bottom: 20px; font-size: 14px;">
+                        <tr>
+                            <td><strong>PROFESSOR(A):</strong> ${nomeProfessor}</td>
+                            <td style="text-align: right;"><strong>DATA:</strong> ${new Date(reg.data).toLocaleDateString('pt-BR')}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>TURMA:</strong> ${reg.turma} | <strong>TURNO:</strong> ${reg.turno || ""}</td>
+                            <td style="text-align: right;"><strong>BIMESTRE:</strong> ${reg.bimestre || ""}</td>
+                        </tr>
+                    </table>
+                    <div style="background: #f2f2f2; padding: 10px; margin-bottom: 10px;"><strong>ÁREA DE CONHECIMENTO:</strong> ${reg.area}</div>
+                    <div style="background: #f2f2f2; padding: 10px; margin-bottom: 10px;"><strong>TEMA DA AULA:</strong> ${reg.tema}</div>
+                    <div style="margin-top: 20px;">
+                        <p style="background: #000; color: #fff; padding: 5px 10px; display: inline-block;"><strong>HABILIDADES (BNCC)</strong></p>
+                        <p style="border: 1px solid #ddd; padding: 15px; text-align: justify; line-height: 1.4;">${reg.habilidade}</p>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <p style="background: #000; color: #fff; padding: 5px 10px; display: inline-block;"><strong>METODOLOGIA / ATIVIDADES</strong></p>
+                        <div style="border: 1px solid #ddd; padding: 15px; white-space: pre-wrap; text-align: justify; line-height: 1.6;">${reg.metodologia}</div>
+                    </div>
+                    <div style="margin-top: 100px; display: flex; justify-content: space-around;">
+                        <div style="text-align: center;">
+                            <div style="border-top: 1px solid #000; width: 250px; margin-bottom: 5px;"></div>
+                            <small>Assinatura do Professor</small>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="border-top: 1px solid #000; width: 250px; margin-bottom: 5px;"></div>
+                            <small>Coordenação Pedagógica</small>
+                        </div>
+                    </div>
+                </div>`;
+            document.getElementById('conteudoImpressao').innerHTML = conteudo;
+            setTimeout(() => { window.print(); }, 500);
+        };
+        if (logoUrl) {
+            const img = new Image();
+            img.onload = dispararImpressao; img.onerror = dispararImpressao; img.src = logoUrl;
+        } else { dispararImpressao(); }
+    }
+
+    function filtrarTabela() {
+        const input = document.getElementById("filtroBusca");
+        const filtro = input.value.toUpperCase();
+        const tr = document.getElementById("tabelaRegistros").getElementsByTagName("tr");
+        const status = document.getElementById("statusBusca");
+        let achou = false;
+        for (let i = 1; i < tr.length; i++) {
+            const texto = tr[i].textContent || tr[i].innerText;
+            if (texto.toUpperCase().indexOf(filtro) > -1) {
+                tr[i].style.display = ""; achou = true;
+            } else { tr[i].style.display = "none"; }
+        }
+        status.style.display = achou ? "none" : "block";
+        status.innerText = achou ? "" : "Nenhum resultado para sua busca.";
+    }
+</script>
+</body>
+</html>

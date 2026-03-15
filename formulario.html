@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Planejamento Pedagógico 2026</title>
+    <style>
+        /* MANTIDO SEU CSS ORIGINAL */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; }
+        .container { background: #fff; max-width: 600px; margin: 0 auto; padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .header-status { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 15px; background: #eef4ff; border-radius: 8px; border: 1px solid #d1e3ff; }
+        .info-tag { background: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; color: #1a73e8; border: 1px solid #1a73e8; display: flex; align-items: center; }
+        h2 { color: #1a73e8; margin-bottom: 20px; text-align: center; font-size: 24px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px; color: #333; }
+        select, input, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; outline: none; }
+        .bncc-box { background: #f8f9fa; padding: 18px; border-radius: 10px; border: 1px solid #e0e0e0; border-left: 6px solid #1a73e8; margin: 20px 0; }
+        button { width: 100%; padding: 15px; background: #1a73e8; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        button:hover { background: #1557b0; }
+        #status { margin-top: 15px; text-align: center; font-weight: bold; padding: 10px; border-radius: 5px; }
+        .sucesso { background: #e6f4ea; color: #1e8e3e; } 
+        .erro { background: #fce8e6; color: #d93025; }
+        .btn-voltar-topo { text-decoration: none; color: #1a73e8; font-weight: bold; display: inline-block; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div style="max-width: 600px; margin: 0 auto;">
+    <a href="Painel.html" class="btn-voltar-topo">⬅️ Voltar📉Painel</a>
+</div>
+
+<div class="container">
+    <div class="header-status">
+        <div class="info-tag" id="infoProf">👤 Professor: ...</div>
+        <div class="info-tag" id="infoEscola">🏫 Escola: ...</div>
+        <div class="info-tag" id="infoTurma">👥 Turma: ...</div>
+        <div class="info-tag" id="infoBimestre">📅 Bimestre: ...</div>
+    </div>
+
+    <h2 id="tituloPagina">Planejamento de Aula</h2>
+
+    <form id="formPlanejamento">
+        <div class="grid">
+            <div class="campo">
+                <label>Data da Aula</label>
+                <input type="date" id="dataAula" required>
+            </div>
+            <div class="campo">
+                <label>Total de Aulas</label>
+                <input type="number" id="qtdAulas" required>
+            </div>
+        </div>
+
+        <div class="bncc-box">
+            <div class="grid">
+                <div class="campo">
+                    <label>Área de Conhecimento</label>
+                    <select id="area" onchange="filtrarSeries()" required><option value="">Carregando...</option></select>
+                </div>
+                <div class="campo">
+                    <label>Ano/Série</label>
+                    <select id="serie" onchange="filtrarPraticas()" required><option value="">Aguardando...</option></select>
+                </div>
+            </div>
+            <label>Práticas de Linguagem</label>
+            <select id="pratica" onchange="filtrarObjetos()" required style="margin-bottom: 15px;"><option value="">Aguardando...</option></select>
+            <label>Objetos de Conhecimento</label>
+            <select id="objeto" onchange="filtrarHabilidades()" required style="margin-bottom: 15px;"><option value="">Aguardando...</option></select>
+            <label>Habilidades BNCC</label>
+            <select id="habilidade" required><option value="">Aguardando...</option></select>
+        </div>
+
+        <label>Tema / Subtema</label>
+        <input type="text" id="tema" required style="margin-bottom: 15px;">
+        <label>Sugestões Metodológicas</label>
+        <textarea id="metodologia" rows="4" required></textarea>
+
+        <button type="submit" id="btnSalvar">Salvar Planejamento</button>
+        <div id="status"></div>
+    </form>
+</div>
+
+<script>
+    const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxXrSQVjDjz9zEE46OVSEYR5muSVCjGVLRG8PpJiYC8cFHB-coCd1avS6y2Yh3TJpPD/exec";
+    let bancoBNCC = [];
+    let configPrivada = JSON.parse(localStorage.getItem('configAula'));
+    let nomeProfessor = localStorage.getItem('nomeProfessor');
+
+    window.onload = async () => {
+        if(!nomeProfessor || !configPrivada) { window.location.href = "Login.html"; return; }
+        
+        document.getElementById('infoProf').innerText = "👤 " + nomeProfessor;
+        document.getElementById('infoEscola').innerText = "🏫 " + configPrivada.escola;
+        document.getElementById('infoTurma').innerText = "👥 " + configPrivada.turma;
+        document.getElementById('infoBimestre').innerText = "📅 " + configPrivada.bimestre;
+
+        try {
+            const resBNCC = await fetch(URL_SCRIPT + "?getBNCC=true");
+            bancoBNCC = await resBNCC.json();
+            
+            const areas = [...new Set(bancoBNCC.map(i => i.area))];
+            const selArea = document.getElementById('area');
+            selArea.innerHTML = '<option value="">-- Selecione a Área --</option>';
+            areas.forEach(a => selArea.innerHTML += `<option value="${a}">${a}</option>`);
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const idParaEditar = urlParams.get('idParaEditar');
+            if (idParaEditar) { carregarEdicao(idParaEditar); }
+
+        } catch (e) { console.error(e); }
+    };
+
+    async function carregarEdicao(id) {
+        document.getElementById('tituloPagina').innerText = "✏️ Editar Registro";
+        const btn = document.getElementById('btnSalvar');
+        btn.innerText = "Sincronizando BNCC...";
+        btn.disabled = true;
+
+        const res = await fetch(`${URL_SCRIPT}?getRegistros=true&professor=${nomeProfessor}`);
+        const registros = await res.json();
+        const d = registros.find(r => r.id === id);
+
+        if (d) {
+            if(d.data) {
+                let dataBruta = d.data.split('T')[0];
+                document.getElementById('dataAula').value = dataBruta;
+            }
+            document.getElementById('qtdAulas').value = d.aulas || "";
+            document.getElementById('tema').value = d.tema || "";
+            document.getElementById('metodologia').value = d.metodologia || "";
+
+            setTimeout(() => {
+                const disp = (idCampo, valor) => { 
+                    const el = document.getElementById(idCampo); 
+                    if(el) { el.value = valor; el.dispatchEvent(new Event('change')); }
+                };
+                disp('area', d.area);
+                setTimeout(() => { disp('serie', d.serie);
+                    setTimeout(() => { disp('pratica', d.pratica);
+                        setTimeout(() => { disp('objeto', d.objeto);
+                            setTimeout(() => { 
+                                document.getElementById('habilidade').value = d.habilidade; 
+                                btn.innerText = "Atualizar Planejamento";
+                                btn.disabled = false;
+                            }, 150);
+                        }, 150);
+                    }, 150);
+                }, 150);
+            }, 300);
+        }
+    }
+
+    // FUNÇÕES DE FILTRO (MANTIDAS)
+    function filtrarSeries() {
+        const area = document.getElementById('area').value;
+        const series = [...new Set(bancoBNCC.filter(i => i.area === area).map(i => i.serie))];
+        const sel = document.getElementById('serie');
+        sel.innerHTML = '<option value="">-- Selecione o Ano --</option>';
+        series.forEach(s => sel.innerHTML += `<option value="${s}">${s}</option>`);
+        limparCamposAbaixo('serie');
+    }
+    function filtrarPraticas() {
+        const area = document.getElementById('area').value;
+        const serie = document.getElementById('serie').value;
+        const praticas = [...new Set(bancoBNCC.filter(i => i.area === area && i.serie === serie).map(i => i.pratica))];
+        const sel = document.getElementById('pratica');
+        sel.innerHTML = '<option value="">-- Selecione a Prática --</option>';
+        praticas.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`);
+        limparCamposAbaixo('pratica');
+    }
+    function filtrarObjetos() {
+        const area = document.getElementById('area').value;
+        const serie = document.getElementById('serie').value;
+        const pratica = document.getElementById('pratica').value;
+        const objetos = [...new Set(bancoBNCC.filter(i => i.area === area && i.serie === serie && i.pratica === pratica).map(i => i.objeto))];
+        const sel = document.getElementById('objeto');
+        sel.innerHTML = '<option value="">-- Selecione o Objeto --</option>';
+        objetos.forEach(o => sel.innerHTML += `<option value="${o}">${o}</option>`);
+        limparCamposAbaixo('objeto');
+    }
+    function filtrarHabilidades() {
+        const area = document.getElementById('area').value;
+        const serie = document.getElementById('serie').value;
+        const pratica = document.getElementById('pratica').value;
+        const objeto = document.getElementById('objeto').value;
+        const selHabil = document.getElementById('habilidade');
+        selHabil.innerHTML = '<option value="">-- Selecione a Habilidade --</option>';
+        const filtradas = bancoBNCC.filter(i => i.area === area && i.serie === serie && i.pratica === pratica && i.objeto === objeto);
+        filtradas.forEach(item => {
+            let opt = document.createElement('option');
+            opt.value = item.habilidade; opt.innerHTML = item.habilidade;
+            selHabil.appendChild(opt);
+        });
+    }
+    function limparCamposAbaixo(campo) {
+        if(campo === 'serie') document.getElementById('pratica').innerHTML = '<option value="">Aguardando...</option>';
+        if(campo === 'pratica' || campo === 'serie') document.getElementById('objeto').innerHTML = '<option value="">Aguardando...</option>';
+        document.getElementById('habilidade').innerHTML = '<option value="">Aguardando...</option>';
+    }
+
+    // --- FUNÇÃO DE SALVAMENTO CORRIGIDA ---
+    document.getElementById('formPlanejamento').onsubmit = async (e) => {
+        e.preventDefault();
+
+        // Validação de 15 dias (Mantida)
+        const dataInput = document.getElementById('dataAula').value;
+        const dataSelecionada = new Date(dataInput + 'T12:00:00');
+        const hoje = new Date();
+        hoje.setHours(0,0,0,0);
+        const diffDias = Math.ceil((dataSelecionada - hoje) / (1000 * 60 * 60 * 24));
+
+        if (diffDias < -15 || diffDias > 15) {
+            alert("⚠️ BLOQUEIO DE DATA: Você só pode registrar entre 15 dias atrás e 15 dias à frente.");
+            return;
+        }
+
+        const btn = document.getElementById('btnSalvar');
+        const status = document.getElementById('status');
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        const idParaEditar = urlParams.get('idParaEditar') || "";
+        const linhaParaEditar = urlParams.get('linha') || "";
+
+        btn.disabled = true;
+        status.className = "";
+        status.innerText = "Salvando na planilha...";
+
+        const dados = {
+            id: String(idParaEditar),
+            linha: String(linhaParaEditar),
+            escola: configPrivada.escola,
+            professor: nomeProfessor,
+            turno: configPrivada.turno,
+            turma: configPrivada.turma,
+            bimestre: configPrivada.bimestre,
+            data: dataInput,
+            aulas: document.getElementById('qtdAulas').value,
+            area: document.getElementById('area').value,
+            serie: document.getElementById('serie').value,
+            pratica: document.getElementById('pratica').value,
+            objeto: document.getElementById('objeto').value,
+            habilidade: document.getElementById('habilidade').value,
+            tema: document.getElementById('tema').value,
+            metodologia: document.getElementById('metodologia').value,
+            acao: idParaEditar ? "EDITAR_RESPOSTA" : "SALVAR_RESPOSTA" 
+        };
+
+        const formData = new URLSearchParams();
+        for (const key in dados) { formData.append(key, dados[key]); }
+
+        try {
+            // Mudança para 'no-cors' para evitar o erro de resposta falsa
+            await fetch(URL_SCRIPT, { 
+                method: "POST", 
+                body: formData,
+                mode: 'no-cors', 
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            });
+
+            status.className = "sucesso";
+            status.innerText = "✅ Comando enviado! Redirecionando...";
+            setTimeout(() => { window.location.href = "Consulta.html"; }, 1500);
+
+        } catch (error) {
+            status.className = "erro";
+            status.innerText = "❌ Erro de conexão. Verifique o Script.";
+            btn.disabled = false;
+        }
+    };
+</script>
+</body>
+</html>

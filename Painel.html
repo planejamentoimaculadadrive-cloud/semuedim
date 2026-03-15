@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel do Professor - 2026</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; display: flex; flex-direction: column; align-items: center; }
+        
+        /* AJUSTE: Mudei de 18% para 100% para a barra ocupar todo o topo */
+        .nav { width: 35%; background: #1a73e8; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        /* AJUSTE: Aumentei a largura máxima para os 3 cards caberem melhor lado a lado */
+        .container { max-width: 900px; width: 95%; margin-top: 50px; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; padding-bottom: 30px; }
+        
+        .card { background: white; padding: 30px; border-radius: 12px; text-align: center; cursor: pointer; transition: 0.3s; border: 1px solid #eee; text-decoration: none; color: #333; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); border-color: #1a73e8; }
+        .card i { font-size: 40px; color: #1a73e8; display: block; margin-bottom: 15px; font-style: normal; }
+        .card h3 { margin: 0; font-size: 18px; }
+        .card p { color: #666; font-size: 14px; margin-top: 10px; }
+        
+        .btn-sair { background: #d93025; color: white; border: none; padding: 15px 30px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-sair:hover { background: #a51d12; }
+    </style>
+</head>
+<body>
+
+<div class="nav">
+    <span id="boasVindas">Bem-vindo, Professor(a)</span>
+    <button class="btn-sair" onclick="sair()">Sair</button>
+</div>
+
+<div class="container">
+    <a href="Formulario.html" class="card">
+        <i>📝</i>
+        <h3>Novo Planejamento</h3>
+        <p>Registrar novas aulas e selecionar habilidades BNCC.</p>
+    </a>
+
+    <a href="Consulta.html" class="card">
+        <i>🔍</i>
+        <h3>Meus Registros</h3>
+        <p>Buscar, editar, excluir e gerar PDF dos planos feitos.</p>
+    </a>
+
+   <a href="Relatorios.html" class="card">
+        <i>📊</i>
+        <h3>Relatórios GERAIS</h3>
+        <p>Visualizar estatísticas por escola e áreas de conhecimento.</p>
+    </a>
+</div>
+
+<script>
+    window.onload = () => {
+        const nome = localStorage.getItem('nomeProfessor');
+        if(!nome) {
+            window.location.href = "Login.html";
+        } else {
+            document.getElementById('boasVindas').innerText = "Professor(a): " + nome;
+        }
+    };
+
+    function sair() {
+        if(confirm("Deseja realmente sair?")) {
+            localStorage.clear();
+            window.location.href = "Login.html";
+        }
+    }
+</script>
+</body>
+</html>

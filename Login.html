@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso - Sistema Pedagógico 2026</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: #f0f2f5; 
+            display: flex; 
+            flex-direction: column; /* Ajustado para alinhar créditos abaixo */
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+        }
+        .login-card { 
+            background: #fff; 
+            padding: 30px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            width: 100%; 
+            max-width: 380px; 
+            text-align: center; 
+        }
+        .logo-container { margin-bottom: 20px; }
+        .logo-container img { max-width: 150px; height: auto; }
+        h2 { color: #1a73e8; margin-bottom: 5px; font-size: 22px; }
+        p { color: #5f6368; margin-bottom: 25px; font-size: 14px; }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; margin-bottom: 5px; color: #3c4043; font-weight: 600; font-size: 13px; }
+        select, input { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #dadce0; 
+            border-radius: 8px; 
+            font-size: 15px; 
+            outline: none; 
+            background: #fff;
+        }
+        select:focus, input:focus { border-color: #1a73e8; box-shadow: 0 0 0 2px rgba(26,115,232,0.2); }
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            background-color: #1a73e8; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            margin-top: 10px;
+        }
+        button:hover { background-color: #1557b0; }
+        #mensagem { margin-top: 15px; font-size: 13px; padding: 10px; border-radius: 5px; display: none; }
+        .erro { display: block !important; background: #fce8e6; color: #d93025; border: 1px solid #f1c40f; }
+        .sucesso { display: block !important; background: #e6f4ea; color: #1e8e3e; }
+        
+        /* Estilo dos Créditos */
+        .dev-container { margin-top: 20px; text-align: center; }
+        .logo-Desenvolvedor { max-width: 40px; border-radius: 50%; margin-bottom: 5px; }
+        .credito { color: #5f6368; font-size: 12px; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <div class="logo-container">
+            <img src="https://lh3.googleusercontent.com/u/0/d/1VotgpjdCZ0UreMOYpos9_wtkhvwnEZ92" alt="Logo da Escola" class="logo-escola">
+        </div>
+        <h2>Sistema Pedagógico</h2>
+        <p>Planejamento de Aulas 2026</p>
+        
+        <div class="input-group">
+            <label for="professor">Selecione seu Nome</label>
+            <select id="professor">
+                <option value="">Carregando professores...</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label for="senha">Senha de Acesso</label>
+            <input type="password" id="senha" placeholder="Digite a Senha de 8 digitos">
+        </div>
+
+        <button id="btnEntrar" onclick="executarLogin()">Entrar no Sistema</button>
+        <div id="mensagem"></div>
+    </div> 
+
+    <div class="dev-container"> 
+        <img src="https://lh3.googleusercontent.com/u/0/d/1WYPSaHqtqs8On1ikFot8z6r4q5gfBf4p" alt="Logo do Desenvolvedor" class="logo-Desenvolvedor">
+        <p class="credito">Desenvolvido por: @Erivaldo Silva</p> 
+    </div>
+
+    <script>
+        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxXrSQVjDjz9zEE46OVSEYR5muSVCjGVLRG8PpJiYC8cFHB-coCd1avS6y2Yh3TJpPD/exec";
+
+        window.onload = async () => {
+            // MUDANÇA 1: Limpa logins antigos ao abrir a tela
+            localStorage.clear();
+
+            // MUDANÇA 2: Permite apertar ENTER para entrar
+            document.getElementById('senha').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') { executarLogin(); }
+            });
+
+            try {
+                const response = await fetch(URL_SCRIPT);
+                const nomes = await response.json();
+                const select = document.getElementById('professor');
+                select.innerHTML = '<option value="">-- Selecione seu nome --</option>';
+                
+                nomes.forEach(nome => {
+                    let opt = document.createElement('option');
+                    opt.value = nome;
+                    opt.innerHTML = nome;
+                    select.appendChild(opt);
+                });
+            } catch (e) {
+                document.getElementById('professor').innerHTML = '<option value="">Erro ao carregar lista</option>';
+            }
+        };
+
+        async function executarLogin() {
+            const btn = document.getElementById('btnEntrar');
+            const msg = document.getElementById('mensagem');
+            const prof = document.getElementById('professor').value;
+            const senha = document.getElementById('senha').value;
+
+            if (!prof || !senha) {
+                msg.className = "erro";
+                msg.innerText = "Selecione o professor e digite a senha.";
+                msg.style.display = "block";
+                return;
+            }
+
+            btn.disabled = true;
+            msg.className = "";
+            msg.style.display = "block";
+            msg.innerText = "Autenticando...";
+
+            const formData = new FormData();
+            formData.append('professor', prof);
+            formData.append('senha', senha);
+
+            try {
+                const response = await fetch(URL_SCRIPT, {
+                    method: "POST",
+                    body: new URLSearchParams(formData)
+                });
+                
+                const resultado = await response.json();
+
+                if (resultado.status === 'sucesso') {
+                    msg.className = "sucesso";
+                    msg.innerText = "Acesso autorizado! Redirecionando...";
+                    localStorage.setItem('nomeProfessor', prof);
+                    
+                    setTimeout(() => {
+                        window.location.href = "Selecao.html"; 
+                    }, 800);
+                    
+                } else {
+                    btn.disabled = false;
+                    msg.className = "erro";
+                    msg.innerText = resultado.mensagem;
+                }
+            } catch (error) {
+                btn.disabled = false;
+                msg.className = "erro";
+                msg.innerText = "Erro na comunicação.";
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>

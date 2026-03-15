@@ -1,0 +1,22 @@
+{
+  "name": "Portal do Professor - Registro de Aula",
+  "short_name": "Portal Docente",
+  "description": "Sistema de Gestão de Planos de Aula BNCC",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#1a73e8",
+  "theme_color": "#1a73e8",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "niumvideo.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "niumvideo.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

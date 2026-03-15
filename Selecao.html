@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Configuração de Aula</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { color: #1a73e8; text-align: center; margin-bottom: 20px; font-size: 20px; }
+        .grupo { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #3c4043; font-size: 14px; }
+        select { width: 100%; padding: 12px; border: 1px solid #dadce0; border-radius: 8px; outline: none; background: #f9f9f9; }
+        
+        /* Estilo para o botão desativado */
+        button { width: 100%; padding: 14px; background: #1a73e8; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        
+        .credito { text-align: center; color: #666; font-size: 12px; margin-top: 20px; font-weight: 600; }
+        
+        .btn-voltar { display: block; text-align: center; margin-top: 15px; text-decoration: none; color: #1a73e8; font-weight: bold; font-size: 14px; }
+        .btn-voltar:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>🚸 DADOS DA ESCOLA 🏫</h2>
+    
+    <div class="grupo">
+        <label>Escola</label>
+        <select id="escola"><option>Carregando...</option></select>
+    </div>
+    <div class="grupo">
+        <label>Bimestre</label>
+        <select id="bimestre"><option>Carregando...</option></select>
+    </div>
+    <div class="grupo">
+        <label>Turma</label>
+        <select id="turma"><option>Carregando...</option></select>
+    </div>
+    <div class="grupo">
+        <label>Turno</label>
+        <select id="turno"><option>Carregando...</option></select>
+    </div>
+
+    <button id="btnProsseguir" onclick="prosseguir()" disabled>Aguarde, carregando...</button>
+    
+    <p class="credito">Desenvolvido por: @Erivaldo Silva</p>
+    <a href="Login.html" class="btn-voltar">⬅️ Voltar ao Login</a>
+</div>
+
+<script>
+    const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxXrSQVjDjz9zEE46OVSEYR5muSVCjGVLRG8PpJiYC8cFHB-coCd1avS6y2Yh3TJpPD/exec";
+
+    window.onload = async () => {
+        // SEGURANÇA: Verifica se o professor está logado
+        const nome = localStorage.getItem('nomeProfessor');
+        if(!nome) {
+            window.location.href = "Login.html";
+            return;
+        }
+
+        try {
+            const response = await fetch(URL_SCRIPT + "?getConfigs=true");
+            const data = await response.json();
+            
+            preencherSelect('escola', data.escolas);
+            preencherSelect('bimestre', data.bimestres);
+            preencherSelect('turma', data.turmas);
+            preencherSelect('turno', data.turnos);
+
+            // Ativa o botão após carregar tudo
+            const btn = document.getElementById('btnProsseguir');
+            btn.disabled = false;
+            btn.innerText = "Ir para Painel Principal";
+            
+        } catch (e) { 
+            alert("Erro ao carregar configurações. Verifique sua internet."); 
+            document.getElementById('btnProsseguir').innerText = "Erro ao carregar";
+        }
+    };
+
+    function preencherSelect(id, lista) {
+        const sel = document.getElementById(id);
+        sel.innerHTML = '';
+        // Adiciona uma opção vazia para obrigar a escolha
+        sel.innerHTML = '<option value="">-- Selecione --</option>';
+        
+        lista.forEach(item => {
+            if(item) {
+                let opt = document.createElement('option');
+                opt.value = item;
+                opt.innerHTML = item;
+                sel.appendChild(opt);
+            }
+        });
+        sel.style.background = "#fff"; // Muda a cor quando carrega
+    }
+
+    function prosseguir() {
+        const escola = document.getElementById('escola').value;
+        const bimestre = document.getElementById('bimestre').value;
+        const turma = document.getElementById('turma').value;
+        const turno = document.getElementById('turno').value;
+
+        // Validação simples: não deixa prosseguir sem selecionar tudo
+        if(!escola || !bimestre || !turma || !turno) {
+            alert("Por favor, selecione todas as opções antes de continuar.");
+            return;
+        }
+
+        const config = {
+            escola: escola,
+            bimestre: bimestre,
+            turma: turma,
+            turno: turno
+        };
+
+        localStorage.setItem('configAula', JSON.stringify(config));
+        window.location.href = "Painel.html";
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f9; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1a73e8; margin-bottom: 20px; padding-bottom: 10px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee; font-size: 14px; }
+        .valor { background: #1a73e8; color: white; padding: 3px 12px; border-radius: 20px; font-weight: bold; }
+        h2, h3 { color: #1a73e8; margin: 0; }
+        .grande { font-size: 55px; text-align: center; display: block; color: #1a73e8; font-weight: bold; margin: 10px 0; }
+        .btn-voltar { text-decoration: none; background: #666; color: white; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: bold; }
+/* --- CÓDIGO DO BOTÃO E IMPRESSÃO --- */
+        .botoes-acao { display: flex; gap: 10px; align-items: center; }
+        
+        .btn-imprimir { 
+            background: #1a73e8; 
+            color: white; 
+            border: none; 
+            padding: 8px 15px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 14px;
+            transition: 0.3s;
+        }
+        .btn-imprimir:hover { background: #1557b0; }
+
+        @media print {
+            .btn-imprimir, .btn-voltar { display: none !important; }
+            body { background: white; padding: 0; }
+            .card { box-shadow: none; border: 1px solid #ddd; margin-bottom: 10px; }
+            .container { max-width: 100%; width: 100%; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2 id="txtNome">📊 Meus Relatórios</h2>
+        <div class="botoes-acao">
+ <a href="Painel.html" class="btn-voltar">📊Voltar</a>
+            <button onclick="window.print()" class="btn-imprimir">🖨️ Imprimir / Gerar PDF</button>
+            </div>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h3>🏫 Minhas Escolas</h3>
+            <div id="listaEscolas">Carregando...</div>
+        </div>
+        
+        <div class="card">
+            <h3>📅 Planos (Mês Atual)</h3>
+            <span id="totalMes" class="grande">0</span>
+            <p style="text-align:center; color:#666; margin:0;">Registros realizados este mês</p>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+        <h3>📚 Por Área de Conhecimento</h3>
+        <div id="listaAreas">Carregando...</div>
+    </div>
+</div>
+
+<script>
+    const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxXrSQVjDjz9zEE46OVSEYR5muSVCjGVLRG8PpJiYC8cFHB-coCd1avS6y2Yh3TJpPD/exec";
+
+   window.onload = function() {
+    // IMPORTANTE: Tem que ser exatamente 'nomeProfessor'
+    const profLogado = localStorage.getItem("nomeProfessor"); 
+
+    if (!profLogado) {
+        alert("Sessão expirada. Faça login novamente.");
+        window.location.href = "login.html"; 
+        return;
+    }
+    
+        document.getElementById("txtNome").innerText = "📊 Relatórios: " + profLogado;
+
+        fetch(URL_SCRIPT + "?getRelatorios=true")
+            .then(r => r.json())
+            .then(dados => {
+                let esc = {}, ar = {}, mesTotal = 0;
+                let mesAtual = new Date().getMonth();
+                const nomeBusca = profLogado.trim().toUpperCase();
+
+                dados.forEach(d => {
+                    // TÉCNICA DE SEGURANÇA: Tenta pegar pelo nome da propriedade OU pela letra da coluna
+                    // Coluna C (Professor), Coluna B (Escola), Coluna I (Área)
+                    const nomePlanilha = (d.professor || d.colC || "").toString().trim().toUpperCase();
+                    const escolaValor = d.escola || d.colB || "Outros";
+                    const areaValor = d.area || d.colI || "Não Definida";
+
+                    if (nomePlanilha === nomeBusca) {
+                        // Soma Escola
+                        esc[escolaValor] = (esc[escolaValor] || 0) + 1;
+                        
+                        // Soma Área
+                        ar[areaValor] = (ar[areaValor] || 0) + 1;
+                        
+                        // Soma Mês Atual
+                        const dataValor = d.data || d.colA; // Geralmente o ID/Data está na Coluna A
+                        if(dataValor) {
+                            let dataPlano = new Date(dataValor);
+                            if(!isNaN(dataPlano) && dataPlano.getMonth() === mesAtual) mesTotal++;
+                        }
+                    }
+                });
+
+                // Mostrar Escolas
+                document.getElementById("listaEscolas").innerHTML = Object.keys(esc).sort().map(k => 
+                    `<div class="item"><span>${k}</span><span class="valor">${esc[k]}</span></div>`
+                ).join('') || "Nenhum plano encontrado para suas colunas.";
+
+                // Mostrar Áreas
+                document.getElementById("listaAreas").innerHTML = Object.keys(ar).sort().map(k => 
+                    `<div class="item"><span>${k}</span><span class="valor">${ar[k]}</span></div>`
+                ).join('') || "Sem dados de área.";
+
+                document.getElementById("totalMes").innerText = mesTotal;
+            })
+            .catch(err => {
+                document.getElementById("listaEscolas").innerText = "Erro ao carregar dados.";
+                console.error(err);
+            });
+    }
+</script>
+</body>
+</html>
