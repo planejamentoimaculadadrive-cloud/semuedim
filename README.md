@@ -1,31 +1,53 @@
 # 🏫 Sistema Pedagógico 2026
+> **Gestão inteligente de planos de aula integrados à BNCC.**
 
-Este é um sistema de gestão educacional desenvolvido para facilitar o registro de planos de aula, alinhado às normas da **BNCC**. O projeto utiliza tecnologias web para o frontend e o **Google Sheets** como banco de dados (Backend).
+![Status](https://img.shields.io/badge/Status-Conclu%C3%ADdo-brightgreen)
+![Tecnologias](https://img.shields.io/badge/Tech-HTML%20%7C%20JS%20%7C%20GAS-blue)
 
-## 🚀 Funcionalidades
+Este sistema foi desenvolvido para modernizar o processo de planejamento pedagógico. Ele permite que professores registrem, consultem e editem seus planos de aula de forma rápida, com armazenamento direto em nuvem via Google Sheets.
 
-* **Login Seguro:** Acesso restrito via Cadastro Docente.
-* **Lançamento de Planos:** Formulário inteligente com filtros automáticos da BNCC.
-* **Trava de Segurança:** Bloqueio automático para registros fora da janela de 15 dias.
-* **Consulta e Edição:** Histórico completo de planos lançados com opção de alteração e exclusão.
-* **Banco de Dados:** Integração total com Google Apps Script.
+---
 
-## 🛠️ Tecnologias Utilizadas
+## 🚀 Funcionalidades Principais
 
-* **Frontend:** HTML5, CSS3 (Responsivo) e JavaScript (Async/Await).
-* **Backend:** Google Apps Script (GAS).
-* **Database:** Google Sheets (Planilhas Google).
+- 🔐 **Acesso Restrito:** Sistema de login validado via base de dados de docentes.
+- 📝 **Lançamento Inteligente:** Seleção dinâmica de Áreas, Objetos e Habilidades da BNCC.
+- 📅 **Trava de Segurança:** Validação de data (limite de 15 dias retroativos ou futuros).
+- ✏️ **Gestão de Registros:** Painel para consulta, edição e exclusão de planos existentes.
+- 📊 **Relatórios:** Estrutura preparada para geração de indicadores pedagógicos.
 
-## 📋 Pré-requisitos para Instalação
+---
 
-Para rodar este projeto, você precisará:
-1. Uma planilha Google configurada com as abas: `RESPOSTAS`, `CONFIG_SISTEMA`, `REFERENCIAS` e `CADASTRO_DOCENTE`.
-2. O ID da sua planilha configurado no arquivo `Código.gs`.
-3. O URL da Implantação do Script atualizado nos arquivos HTML.
+## 🛠️ Tecnologias e Arquitetura
 
-## 🔧 Como Usar
+O projeto utiliza uma arquitetura **Serverless** simplificada:
 
-1.  Abra o arquivo `Login.html`.
-2.  Insira suas credenciais cadastradas na aba `CADASTRO_DOCENTE`.
-3.  No Painel Principal, selecione "Novo Planejamento".
-4.  Preencha os dados e clique em "Salvar".
+* **Frontend:** HTML5, CSS3 (Design Responsivo) e JavaScript Moderno (Fetch API).
+* **Backend:** [Google Apps Script](https://www.google.com/script/start/) (Processamento de dados).
+* **Banco de Dados:** [Google Sheets](https://www.google.com/sheets/about/) (Armazenamento em tempo real).
+
+---
+
+## ⚙️ Configuração do Backend (Google Apps Script)
+
+Para replicar este ambiente, siga as instruções abaixo:
+
+1.  Crie uma Planilha Google com as abas: `RESPOSTAS`, `CONFIG_SISTEMA`, `REFERENCIAS` e `CADASTRO_DOCENTE`.
+2.  No menu **Extensões > Apps Script**, cole o conteúdo do arquivo `Codigo.gs`.
+3.  Substitua a constante `SPREADSHEET_ID` pelo ID da sua planilha.
+4.  Clique em **Implantar > Nova Implantação**.
+    * **Tipo:** App da Web
+    * **Quem pode acessar:** Qualquer pessoa
+5.  Copie a URL gerada e cole na variável `URL_SCRIPT` dos arquivos HTML.
+
+---
+
+## 📂 Estrutura de Arquivos
+
+```text
+├── Login.html        # Tela de acesso inicial
+├── Painel.html       # Menu principal do sistema
+├── Formulario.html   # Cadastro e Edição de planos
+├── Consulta.html     # Visualização e filtros de histórico
+├── Codigo.gs         # Lógica do servidor (Google Script)
+└── README.md         # Documentação do projeto
